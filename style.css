@@ -1,15 +1,101 @@
 body {
-    font-family: Arial;
-    background: #111;
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI";
+    background: radial-gradient(circle at top, #1b1b2f, #0f0f0f);
     color: white;
+}
+
+/* TOP BAR */
+.topbar {
+    padding: 20px;
     text-align: center;
 }
 
-.container {
-    margin-top: 50px;
+.title {
+    font-size: 22px;
+    font-weight: 700;
 }
 
-input, button {
-    margin: 10px;
-    padding: 10px;
+.subtitle {
+    font-size: 13px;
+    color: #aaa;
+}
+
+/* SECTION */
+.section {
+    padding: 10px 15px;
+}
+
+.section-title {
+    font-size: 14px;
+    color: #aaa;
+    margin-bottom: 10px;
+}
+
+/* GRID GALLERY */
+.grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+}
+
+.grid img {
+    width: 100%;
+    height: 90px;
+    object-fit: cover;
+    border-radius: 12px;
+    transition: 0.2s;
+}
+
+.grid img:active {
+    transform: scale(0.95);
+}
+
+/* CARD */
+.card {
+    margin: 15px;
+    padding: 18px;
+    border-radius: 18px;
+    background: rgba(255,255,255,0.06);
+    backdrop-filter: blur(14px);
+    border: 1px solid rgba(255,255,255,0.08);
+}
+
+/* BUTTONS */
+.btn {
+    width: 100%;
+    padding: 14px;
+    margin-top: 10px;
+    border: none;
+    border-radius: 14px;
+    font-size: 15px;
+    cursor: pointer;
+    transition: 0.2s;
+    color: white;
+}
+
+.btn:active {
+    transform: scale(0.98);
+}
+
+.primary {
+    background: linear-gradient(135deg, #2ea6ff, #007aff);
+}
+
+.success {
+    background: linear-gradient(135deg, #34d399, #059669);
+}
+
+/* PREVIEW */
+#preview img {
+    width: 100%;
+    margin-top: 12px;
+    border-radius: 14px;
+}
+
+/* STATUS */
+#status {
+    margin-top: 10px;
+    font-size: 13px;
+    color: #aaa;
 }
