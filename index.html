@@ -2,26 +2,48 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Photo Analyzer</title>
+  <title>AI Vision Premium</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-  <div class="container">
+<div class="app">
 
-    <h2>📸 Загрузка фото</h2>
+  <div class="topbar">
+    <div class="title">📦 AI Vision</div>
+    <div class="subtitle">Premium Analyzer</div>
+  </div>
 
-    <input type="file" id="fileInput" accept="image/*">
+  <!-- ГАЛЕРЕЯ ЧАТА -->
+  <div class="section">
+    <div class="section-title">🖼 Фото из чата</div>
+    <div id="chatGallery" class="grid"></div>
+  </div>
 
-    <button onclick="sendPhoto()">Анализировать</button>
+  <!-- ЗАГРУЗКА -->
+  <div class="card">
 
-    <pre id="result"></pre>
+    <input type="file" id="fileInput" accept="image/*" capture="environment" hidden>
+
+    <button class="btn primary" onclick="openPicker()">
+      📸 Выбрать фото
+    </button>
+
+    <div id="preview"></div>
+
+    <button class="btn success" onclick="sendPhoto()">
+      ⚡ Анализировать
+    </button>
+
+    <div id="status"></div>
 
   </div>
 
-  <script src="app.js"></script>
+</div>
+
+<script src="app.js"></script>
 
 </body>
 </html>
