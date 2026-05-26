@@ -1,94 +1,97 @@
 /* ══════════════════════════════════════
-   INIT
+   TELEGRAM INIT
 ══════════════════════════════════════ */
-
 const tg = window.Telegram.WebApp;
 tg.expand();
-tg.setHeaderColor('#F0EDE8');
-tg.setBackgroundColor('#F0EDE8');
+tg.setHeaderColor('#EEE9E2');
+tg.setBackgroundColor('#EEE9E2');
 
-// URL бэкенда для получения фото из группы
-// Укажи адрес своего бота-сервера в .env и передай через мета-тег или константу
+// URL бэкенда — задаётся через window.API_URL = "http://..."
+// до подключения этого скрипта, или в .env через мета-тег
 const API_URL = window.API_URL || "";
 
 let selectedFile = null;
 let isAnalyzing  = false;
 
 /* ══════════════════════════════════════
+   ЭЛЕМЕНТЫ
+══════════════════════════════════════ */
+const $uploadZone  = document.getElementById("uploadZone");
+const $previewZone = document.getElementById("previewZone");
+const $previewImg  = document.getElementById("previewImg");
+const $previewVeil = document.getElementById("previewVeil");
+const $veilLabel   = document.getElementById("veilLabel");
+const $statusLine  = document.getElementById("statusLine");
+const $resultCard  = document.getElementById("resultCard");
+const $fileInput   = document.getElementById("fileInput");
+const $refreshBtn  = document.getElementById("refreshBtn");
+
+/* ══════════════════════════════════════
    ОТКРЫТЬ ПИКЕР
 ══════════════════════════════════════ */
 function openPicker() {
   if (isAnalyzing) return;
-  document.getElementById("fileInput").click();
+  $fileInput.click();
 }
 
 /* ══════════════════════════════════════
    ВЫБОР ФАЙЛА → автоматический анализ
 ══════════════════════════════════════ */
-document.getElementById("fileInput").addEventListener("change", function(e) {
+$fileInput.addEventListener("change", function(e) {
   const file = e.target.files[0];
   if (!file) return;
-
   selectedFile = file;
+  this.value = ""; // сброс чтобы то же фото можно выбрать снова
 
   const reader = new FileReader();
   reader.onload = function(ev) {
-    // Показываем превью
-    const img = document.getElementById("previewImg");
-    img.src = ev.target.result;
-
-    document.getElementById("previewWrap").classList.remove("hidden");
-    document.getElementById("resultCard").classList.add("hidden");
+    // Показываем превью, прячем кнопку
+    $previewImg.src = ev.target.result;
+    $uploadZone.classList.add("hidden");
+    $previewZone.classList.remove("hidden");
+    $resultCard.classList.add("hidden");
 
     // Сразу запускаем анализ
     sendPhoto();
   };
   reader.readAsDataURL(file);
-
-  // Сбрасываем input чтобы можно было выбрать то же фото повторно
-  this.value = "";
 });
 
 /* ══════════════════════════════════════
-   ОТПРАВКА + АНАЛИЗ
+   ОТПРАВКА ФОТО НА АНАЛИЗ
 ══════════════════════════════════════ */
 function sendPhoto() {
   if (!selectedFile || isAnalyzing) return;
-
   isAnalyzing = true;
-  setStatus("⏳ Анализирую...");
-  setLoading(true);
+
+  setVeil(true, "Анализирую...");
+  setStatus("📤 Отправляем на сервер...");
 
   const reader = new FileReader();
   reader.onload = function(e) {
     const base64 = e.target.result.split(",")[1];
 
-    // Получаем chat_id если приложение открыто из группы
-    const chatId = tg.initDataUnsafe?.chat?.id
-                || tg.initDataUnsafe?.start_param
-                || null;
+    // chat_id из контекста Telegram
+    const chatId =
+      tg.initDataUnsafe?.chat?.id ||
+      tg.initDataUnsafe?.start_param ||
+      null;
 
-    tg.sendData(JSON.stringify({
-      image:   base64,
-      chat_id: chatId,
-    }));
+    tg.sendData(JSON.stringify({ image: base64, chat_id: chatId }));
 
-    setStatus("📤 Отправлено на анализ");
-    setLoading(false);
-    isAnalyzing = false;
+    setVeil(false);
+    setStatus("⏳ Ожидаем результат от бота...");
   };
-
   reader.readAsDataURL(selectedFile);
 }
 
 /* ══════════════════════════════════════
-   ПОЛУЧИТЬ РЕЗУЛЬТАТ ОТ БОТА
-   Бот отправляет результат через tg.onEvent
+   РЕЗУЛЬТАТ ОТ БОТА
 ══════════════════════════════════════ */
 tg.onEvent("message", function(data) {
   try {
     const result = typeof data === "string" ? JSON.parse(data) : data;
-    if (result.product_name) showResult(result);
+    if (result && result.product_name) showResult(result);
   } catch(_) {}
 });
 
@@ -96,64 +99,86 @@ function showResult(r) {
   document.getElementById("resName").textContent     = r.product_name     || "—";
   document.getElementById("resBrand").textContent    = r.brand            || "—";
   document.getElementById("resCategory").textContent = r.product_category || "—";
-  document.getElementById("resultCard").classList.remove("hidden");
+
+  setVeil(false);
   setStatus("");
+  $resultCard.classList.remove("hidden");
+  isAnalyzing = false;
 }
 
 /* ══════════════════════════════════════
-   СБРОС UI
+   СБРОС — следующее фото
 ══════════════════════════════════════ */
 function resetUI() {
   selectedFile = null;
   isAnalyzing  = false;
 
-  document.getElementById("previewWrap").classList.add("hidden");
-  document.getElementById("resultCard").classList.add("hidden");
-  document.getElementById("previewImg").src = "";
+  $previewZone.classList.add("hidden");
+  $resultCard.classList.add("hidden");
+  $previewImg.src = "";
 
+  setVeil(false);
   setStatus("");
+
+  // Показываем кнопку и сразу открываем пикер
+  $uploadZone.classList.remove("hidden");
   openPicker();
 }
 
 /* ══════════════════════════════════════
-   ГАЛЕРЕЯ — фото из группы
+   ГАЛЕРЕЯ
 ══════════════════════════════════════ */
 async function loadChatPhotos() {
-  if (!API_URL) return;
+  // Анимация кнопки обновления
+  $refreshBtn.classList.add("spinning");
+  setTimeout(() => $refreshBtn.classList.remove("spinning"), 650);
+
+  if (!API_URL) {
+    showGalleryEmpty("Укажите API_URL для загрузки фото");
+    return;
+  }
 
   try {
-    const res  = await fetch(`${API_URL}/api/photos`);
+    const res  = await fetch(`${API_URL}/api/photos`, { signal: AbortSignal.timeout(5000) });
     const data = await res.json();
 
-    const container = document.getElementById("chatGallery");
-    const empty     = document.getElementById("galleryEmpty");
-
     if (!data.photos || data.photos.length === 0) {
-      empty.style.display = "flex";
+      showGalleryEmpty("Нет фото из чата");
       return;
     }
 
-    empty.style.display = "none";
-    container.innerHTML = "";
+    const grid = document.getElementById("chatGallery");
+    grid.innerHTML = "";
 
     data.photos.forEach(p => {
       const img   = document.createElement("img");
       img.src     = p.url;
       img.loading = "lazy";
-      img.alt     = "фото из чата";
+      img.alt     = "";
       img.onclick = () => selectFromGallery(p.url);
-      container.appendChild(img);
+      grid.appendChild(img);
     });
 
   } catch(e) {
-    console.log("[Gallery] API недоступен:", e.message);
+    showGalleryEmpty("Нет соединения с сервером");
   }
 }
 
-// Выбрать фото из галереи и сразу анализировать
+function showGalleryEmpty(text) {
+  const grid = document.getElementById("chatGallery");
+  grid.innerHTML = `
+    <div class="gallery-empty" id="galleryEmpty">
+      <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" class="gallery-empty-icon">
+        <rect x="4" y="8" width="32" height="24" rx="3" stroke="currentColor" stroke-width="1.5"/>
+        <circle cx="14" cy="18" r="3" stroke="currentColor" stroke-width="1.5"/>
+        <path d="M4 28l7-6 5 5 5-4 7 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+      <span>${text}</span>
+    </div>`;
+}
+
 async function selectFromGallery(url) {
   if (isAnalyzing) return;
-
   try {
     const res    = await fetch(url);
     const blob   = await res.blob();
@@ -161,38 +186,33 @@ async function selectFromGallery(url) {
 
     const reader = new FileReader();
     reader.onload = function(ev) {
-      document.getElementById("previewImg").src = ev.target.result;
-      document.getElementById("previewWrap").classList.remove("hidden");
-      document.getElementById("resultCard").classList.add("hidden");
+      $previewImg.src = ev.target.result;
+      $uploadZone.classList.add("hidden");
+      $previewZone.classList.remove("hidden");
+      $resultCard.classList.add("hidden");
       sendPhoto();
     };
     reader.readAsDataURL(selectedFile);
   } catch(e) {
-    setStatus("⚠️ Не удалось загрузить фото");
+    setStatus("⚠️ Не удалось загрузить фото из галереи");
   }
 }
 
 /* ══════════════════════════════════════
    УТИЛИТЫ
 ══════════════════════════════════════ */
-function setStatus(text) {
-  document.getElementById("status").textContent = text;
+function setVeil(on, label = "") {
+  if (on) {
+    $previewVeil.classList.add("visible");
+    $veilLabel.textContent = label;
+  } else {
+    $previewVeil.classList.remove("visible");
+    $veilLabel.textContent = "";
+  }
 }
 
-function setLoading(on) {
-  const wrap = document.getElementById("previewWrap");
-  const spin = document.getElementById("analyzeSpinner");
-  const stat = document.getElementById("analyzeStatus");
-
-  if (on) {
-    wrap.classList.add("loading");
-    spin.classList.remove("hidden");
-    stat.textContent = "Анализирую...";
-  } else {
-    wrap.classList.remove("loading");
-    spin.classList.add("hidden");
-    stat.textContent = "";
-  }
+function setStatus(text) {
+  $statusLine.textContent = text;
 }
 
 /* ══════════════════════════════════════
