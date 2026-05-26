@@ -1,49 +1,93 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <title>AI Vision Premium</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Market Vision</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
+
+<div class="noise"></div>
 
 <div class="app">
 
-  <div class="topbar">
-    <div class="title">📦 AI Vision</div>
-    <div class="subtitle">Premium Analyzer</div>
-  </div>
+  <!-- HEADER -->
+  <header class="header">
+    <div class="header-inner">
+      <div class="logo-mark">MV</div>
+      <div class="header-text">
+        <div class="title">Market Vision</div>
+        <div class="subtitle">Анализ товаров с помощью ИИ</div>
+      </div>
+    </div>
+    <div class="header-line"></div>
+  </header>
 
-  <!-- ГАЛЕРЕЯ ЧАТА -->
-  <div class="section">
-    <div class="section-title">🖼 Фото из чата</div>
-    <div id="chatGallery" class="grid"></div>
-  </div>
+  <!-- ГАЛЕРЕЯ -->
+  <section class="section" id="gallerySection">
+    <div class="section-header">
+      <span class="section-label">Последние фото из чата</span>
+      <button class="refresh-btn" onclick="loadChatPhotos()" title="Обновить">↻</button>
+    </div>
+    <div id="chatGallery" class="gallery">
+      <div class="gallery-empty" id="galleryEmpty">
+        <div class="gallery-empty-icon">🖼</div>
+        <div class="gallery-empty-text">Фото из чата появятся здесь</div>
+      </div>
+    </div>
+  </section>
 
   <!-- ЗАГРУЗКА -->
-  <div class="card">
+  <section class="upload-card">
 
     <input type="file" id="fileInput" accept="image/*" capture="environment" hidden>
 
-    <button class="btn primary" onclick="openPicker()">
-      📸 Выбрать фото
+    <div id="previewWrap" class="preview-wrap hidden">
+      <img id="previewImg" class="preview-img">
+      <div class="preview-overlay">
+        <div id="analyzeSpinner" class="spinner hidden"></div>
+        <div id="analyzeStatus" class="analyze-status"></div>
+      </div>
+    </div>
+
+    <button class="upload-btn" id="uploadBtn" onclick="openPicker()">
+      <div class="upload-btn-icon">📸</div>
+      <div class="upload-btn-text">Выбрать фото</div>
+      <div class="upload-btn-hint">Анализ начнётся автоматически</div>
     </button>
 
-    <div id="preview"></div>
+    <div id="status" class="status-bar"></div>
 
-    <button class="btn success" onclick="sendPhoto()">
-      ⚡ Анализировать
-    </button>
+  </section>
 
-    <div id="status"></div>
-
-  </div>
+  <!-- РЕЗУЛЬТАТ -->
+  <section id="resultCard" class="result-card hidden">
+    <div class="result-header">
+      <div class="result-badge">✓ Распознано</div>
+    </div>
+    <div class="result-row">
+      <span class="result-label">Название</span>
+      <span class="result-value" id="resName">—</span>
+    </div>
+    <div class="result-divider"></div>
+    <div class="result-row">
+      <span class="result-label">Бренд</span>
+      <span class="result-value" id="resBrand">—</span>
+    </div>
+    <div class="result-divider"></div>
+    <div class="result-row">
+      <span class="result-label">Категория</span>
+      <span class="result-value" id="resCategory">—</span>
+    </div>
+    <button class="new-btn" onclick="resetUI()">Загрузить следующее фото</button>
+  </section>
 
 </div>
 
 <script src="app.js"></script>
-
 </body>
 </html>
