@@ -24,6 +24,15 @@ const $fileInput   = document.getElementById("fileInput");
 const $pickBtn     = document.getElementById("pickBtn");
 const $refreshBtn  = document.getElementById("refreshBtn");
 const $pickLabel   = document.getElementById("pickBtnLabel");
+const $btnZone     = document.getElementById("btnZone");
+const $gallery     = document.getElementById("gallerySection");
+
+/* ══════════════════════════════════════
+   СТАРТ — скрыть галерею если нет API
+══════════════════════════════════════ */
+if (!API_URL) {
+  $gallery.classList.add("hidden");
+}
 
 /* ══════════════════════════════════════
    ОТКРЫТЬ ПИКЕР
@@ -45,8 +54,8 @@ $fileInput.addEventListener("change", function(e) {
   const reader = new FileReader();
   reader.onload = function(ev) {
     $previewImg.src = ev.target.result;
-    $resultCard.classList.add("hidden");
     $previewZone.classList.remove("hidden");
+    $btnZone.classList.add("hidden");       // скрываем кнопку
     sendPhoto();
   };
   reader.readAsDataURL(file);
@@ -54,15 +63,16 @@ $fileInput.addEventListener("change", function(e) {
 
 /* ══════════════════════════════════════
    ОТПРАВКА
+   sendData() отправляет данные боту
+   и ЗАКРЫВАЕТ приложение автоматически.
+   Результат бот пришлёт отдельным
+   сообщением в чат.
 ══════════════════════════════════════ */
 function sendPhoto() {
   if (!selectedFile || isAnalyzing) return;
   isAnalyzing = true;
 
-  setVeil(true, "Анализирую...");
-  setStatus("Отправляем на сервер...");
-  $pickLabel.textContent = "Анализирую...";
-  $pickBtn.disabled = true;
+  setVeil(true, "Отправляю...");
 
   const reader = new FileReader();
   reader.onload = function(e) {
@@ -72,72 +82,23 @@ function sendPhoto() {
       tg.initDataUnsafe?.start_param ||
       null;
 
+    // После sendData приложение закроется —
+    // бот пришлёт результат в чат
     tg.sendData(JSON.stringify({ image: base64, chat_id: chatId }));
-    setStatus("Ожидаем результат...");
   };
   reader.readAsDataURL(selectedFile);
 }
 
 /* ══════════════════════════════════════
-   РЕЗУЛЬТАТ ОТ БОТА
-══════════════════════════════════════ */
-tg.onEvent("message", function(data) {
-  try {
-    const r = typeof data === "string" ? JSON.parse(data) : data;
-    if (r && r.product_name) showResult(r);
-  } catch(_) {}
-});
-
-function showResult(r) {
-  document.getElementById("resName").textContent     = r.product_name     || "—";
-  document.getElementById("resBrand").textContent    = r.brand            || "—";
-  document.getElementById("resCategory").textContent = r.product_category || "—";
-
-  setVeil(false);
-  setStatus("");
-  $resultCard.classList.remove("hidden");
-  $pickLabel.textContent = "Следующее фото";
-  $pickBtn.disabled = false;
-  isAnalyzing = false;
-}
-
-/* ══════════════════════════════════════
-   СБРОС
-══════════════════════════════════════ */
-function resetUI() {
-  selectedFile = null;
-  isAnalyzing  = false;
-
-  $previewZone.classList.add("hidden");
-  $resultCard.classList.add("hidden");
-  $previewImg.src = "";
-  $pickLabel.textContent = "Выбрать фото";
-  $pickBtn.disabled = false;
-
-  setVeil(false);
-  setStatus("");
-  openPicker();
-}
-
-$pickBtn.addEventListener("click", function() {
-  if (!$resultCard.classList.contains("hidden")) {
-    resetUI();
-  }
-});
-
-/* ══════════════════════════════════════
    ГАЛЕРЕЯ
 ══════════════════════════════════════ */
 async function loadChatPhotos() {
+  if (!API_URL) return;
+
   $refreshBtn.classList.add("spinning");
   setTimeout(() => $refreshBtn.classList.remove("spinning"), 650);
 
   const grid = document.getElementById("chatGallery");
-
-  if (!API_URL) {
-    grid.innerHTML = `<div class="gallery-empty-msg">Укажите API_URL для загрузки фото</div>`;
-    return;
-  }
 
   try {
     const res  = await fetch(`${API_URL}/api/photos`, {
@@ -175,13 +136,13 @@ async function selectFromGallery(url) {
     const reader = new FileReader();
     reader.onload = function(ev) {
       $previewImg.src = ev.target.result;
-      $resultCard.classList.add("hidden");
       $previewZone.classList.remove("hidden");
+      $btnZone.classList.add("hidden");
       sendPhoto();
     };
     reader.readAsDataURL(selectedFile);
   } catch(e) {
-    setStatus("Не удалось загрузить фото");
+    console.error("Не удалось загрузить фото", e);
   }
 }
 
@@ -195,10 +156,6 @@ function setVeil(on, label = "") {
   } else {
     $previewVeil.classList.add("hidden");
   }
-}
-
-function setStatus(text) {
-  $statusLine.textContent = text;
 }
 
 /* ══════════════════════════════════════
