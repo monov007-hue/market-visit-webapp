@@ -73,7 +73,6 @@ function sendPhoto() {
       null;
 
     tg.sendData(JSON.stringify({ image: base64, chat_id: chatId }));
-
     setStatus("Ожидаем результат...");
   };
   reader.readAsDataURL(selectedFile);
@@ -120,9 +119,8 @@ function resetUI() {
   openPicker();
 }
 
-// Кнопка после результата тоже открывает пикер
 $pickBtn.addEventListener("click", function() {
-  if ($resultCard && !$resultCard.classList.contains("hidden")) {
+  if (!$resultCard.classList.contains("hidden")) {
     resetUI();
   }
 });
