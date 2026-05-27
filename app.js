@@ -14,7 +14,6 @@ let isAnalyzing  = false;
 /* ══════════════════════════════════════
    ЭЛЕМЕНТЫ
 ══════════════════════════════════════ */
-const $uploadCard  = document.getElementById("uploadCard");
 const $previewZone = document.getElementById("previewZone");
 const $previewImg  = document.getElementById("previewImg");
 const $previewVeil = document.getElementById("previewVeil");
@@ -46,7 +45,6 @@ $fileInput.addEventListener("change", function(e) {
   const reader = new FileReader();
   reader.onload = function(ev) {
     $previewImg.src = ev.target.result;
-    $uploadCard.classList.add("hidden");
     $resultCard.classList.add("hidden");
     $previewZone.classList.remove("hidden");
     sendPhoto();
@@ -113,7 +111,6 @@ function resetUI() {
 
   $previewZone.classList.add("hidden");
   $resultCard.classList.add("hidden");
-  $uploadCard.classList.remove("hidden");
   $previewImg.src = "";
   $pickLabel.textContent = "Выбрать фото";
   $pickBtn.disabled = false;
@@ -180,7 +177,6 @@ async function selectFromGallery(url) {
     const reader = new FileReader();
     reader.onload = function(ev) {
       $previewImg.src = ev.target.result;
-      $uploadCard.classList.add("hidden");
       $resultCard.classList.add("hidden");
       $previewZone.classList.remove("hidden");
       sendPhoto();
