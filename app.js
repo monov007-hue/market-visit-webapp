@@ -142,10 +142,20 @@ async function loadChatPhotos() {
   const grid = document.getElementById("chatGallery");
 
   try {
-    const res = await fetch(`${GALLERY_WORKER}/api/photos`), {
-      signal: AbortSignal.timeout(6000)
-    });
-    const data = await res.json();
+       const res = await fetch(
+           `${GALLERY_WORKER}/api/photos`,
+           {
+               signal: AbortSignal.timeout(6000)
+           }
+       );
+   
+       const data = await res.json();
+   
+       console.log(data);
+      }
+      catch (err) {
+       console.error(err);
+      }
 
     if (!data.photos || data.photos.length === 0) {
       grid.innerHTML = `<div class="gallery-empty-msg">Нет фото из чата</div>`;
