@@ -222,4 +222,3 @@ function showToast(msg, duration = 3500) {
    СТАРТ
 ══════════════════════════════════════ */
 loadChatPhotos();
-});
