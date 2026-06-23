@@ -1,8 +1,8 @@
 /* ══════════════════════════════════════
    КОНФИГУРАЦИЯ
 ══════════════════════════════════════ */
-const ANALYZE_WORKER = "https://marketvisit-app-production.up.railway.app";
-const GALLERY_WORKER = "https://marketvisit-app-production.up.railway.app";
+const ANALYZE_WORKER = "https://worker-production-fbf0.up.railway.app";
+const GALLERY_WORKER = "https://worker-production-fbf0.up.railway.app";
 const MAX_SIZE_MB    = 4;
 
 /* ══════════════════════════════════════
