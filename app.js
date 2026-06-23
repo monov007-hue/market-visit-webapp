@@ -221,4 +221,6 @@ function showToast(msg, duration = 3500) {
 /* ══════════════════════════════════════
    СТАРТ
 ══════════════════════════════════════ */
+document.getElementById("pickBtn").addEventListener("click", openPicker);
+document.getElementById("refreshBtn").addEventListener("click", loadChatPhotos);
 loadChatPhotos();
