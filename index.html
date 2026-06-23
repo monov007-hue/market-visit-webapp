@@ -7,10 +7,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <link rel="stylesheet" href="style.css?v=5">
+  <link rel="stylesheet" href="style.css?v=6">
 </head>
 <body>
-
 <div class="app">
 
   <!-- HEADER -->
@@ -39,7 +38,7 @@
     </div>
   </header>
 
-  <!-- ГАЛЕРЕЯ (скрывается если нет API_URL) -->
+  <!-- ГАЛЕРЕЯ -->
   <section class="section" id="gallerySection">
     <div class="section-row">
       <span class="section-title">Последние фото из чата</span>
@@ -58,18 +57,45 @@
     </div>
   </section>
 
-  <!-- ПРЕВЬЮ -->
+  <!-- ПРЕВЬЮ + вуаль анализа -->
   <div class="preview-zone hidden" id="previewZone">
     <div class="preview-frame">
       <img id="previewImg" class="preview-img" alt="">
       <div class="preview-veil hidden" id="previewVeil">
         <div class="ring-spinner"></div>
-        <span class="veil-text" id="veilLabel">Отправляю...</span>
+        <span class="veil-text" id="veilLabel">Анализирую...</span>
       </div>
     </div>
   </div>
 
-  <!-- КНОПКА (скрывается когда показано превью) -->
+  <!-- РЕЗУЛЬТАТ (скрыт до анализа) -->
+  <div class="result-card hidden" id="resultCard">
+    <div class="result-success">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <circle cx="8" cy="8" r="8" fill="#34C759"/>
+        <path d="M4.5 8l2.5 2.5 4-4" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Товар определён
+    </div>
+    <div class="result-rows">
+      <div class="result-row">
+        <span class="r-key">Название</span>
+        <span class="r-val" id="resName">—</span>
+      </div>
+      <div class="r-line"></div>
+      <div class="result-row">
+        <span class="r-key">Бренд</span>
+        <span class="r-val" id="resBrand">—</span>
+      </div>
+      <div class="r-line"></div>
+      <div class="result-row">
+        <span class="r-key">Категория</span>
+        <span class="r-val" id="resCategory">—</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- КНОПКА -->
   <div class="btn-zone" id="btnZone">
     <input type="file" id="fileInput" accept="image/*" capture="environment" hidden>
     <button class="pick-btn" id="pickBtn" onclick="openPicker()">
@@ -80,7 +106,10 @@
       <span id="pickBtnLabel">Выбрать фото</span>
     </button>
   </div>
+
+  <div class="bot-name">@MarketVisit_SV_bot</div>
+
 </div>
-<script src="app.js?v=5"></script>
+<script src="app.js?v=6"></script>
 </body>
 </html>
