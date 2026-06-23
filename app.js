@@ -142,7 +142,7 @@ async function loadChatPhotos() {
   const grid = document.getElementById("chatGallery");
 
   try {
-    const res  = await fetch(`${GALLERY_WORKER}/photos?limit=20`, {
+    const res = await fetch(`${GALLERY_WORKER}/api/photos`), {
       signal: AbortSignal.timeout(6000)
     });
     const data = await res.json();
