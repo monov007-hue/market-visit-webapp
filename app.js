@@ -1,8 +1,8 @@
 /* ══════════════════════════════════════
    КОНФИГУРАЦИЯ
 ══════════════════════════════════════ */
-const ANALYZE_WORKER = "https://market-vision-analyze.marketvisit.workers.dev";
-const GALLERY_WORKER = "https://market-vision-gallery.marketvisit.workers.dev";
+const ANALYZE_WORKER = "https://marketvisit-app-production.up.railway.app";
+const GALLERY_WORKER = "https://marketvisit-app-production.up.railway.app";
 const MAX_SIZE_MB    = 4;
 
 /* ══════════════════════════════════════
