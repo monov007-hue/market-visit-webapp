@@ -24,7 +24,6 @@ const $resultCard  = document.getElementById("resultCard");
 const $fileInput   = document.getElementById("fileInput");
 const $btnZone     = document.getElementById("btnZone");
 const $refreshBtn  = document.getElementById("refreshBtn");
-const $gallery     = document.getElementById("gallerySection");
 
 const $resName     = document.getElementById("resName");
 const $resBrand    = document.getElementById("resBrand");
@@ -48,7 +47,6 @@ $fileInput.addEventListener("change", function(e) {
   if (!file) return;
   this.value = "";
 
-  // Проверка размера
   if (file.size / 1024 / 1024 > MAX_SIZE_MB) {
     showToast(`Файл слишком большой. Максимум ${MAX_SIZE_MB} МБ.`);
     return;
@@ -56,20 +54,17 @@ $fileInput.addEventListener("change", function(e) {
 
   const reader = new FileReader();
   reader.onload = function(ev) {
-    // Показываем превью
     $previewImg.src = ev.target.result;
     $previewZone.classList.remove("hidden");
     $resultCard.classList.add("hidden");
     $btnZone.classList.add("hidden");
-
-    // Запускаем анализ
     analyzePhoto(ev.target.result);
   };
   reader.readAsDataURL(file);
 });
 
 /* ══════════════════════════════════════
-   АНАЛИЗ ЧЕРЕЗ CLOUDFLARE WORKER
+   АНАЛИЗ
 ══════════════════════════════════════ */
 async function analyzePhoto(dataUrl) {
   if (isAnalyzing) return;
@@ -78,11 +73,10 @@ async function analyzePhoto(dataUrl) {
   setVeil(true, "Анализирую...");
 
   try {
-    // Извлекаем base64 без префикса
     const base64 = dataUrl.split(",")[1];
 
     setVeil(true, "Google Vision...");
-    const response = await fetch(`${ANALYZE_WORKER}/analyze`, {
+    const response = await fetch(`${ANALYZE_WORKER}/api/analyze`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ image: base64 }),
@@ -106,7 +100,6 @@ async function analyzePhoto(dataUrl) {
   } catch (err) {
     console.error("Ошибка анализа:", err);
     showToast("⚠️ " + err.message);
-    // Показываем кнопку снова
     setVeil(false);
     $previewZone.classList.add("hidden");
     $btnZone.classList.remove("hidden");
@@ -128,7 +121,6 @@ function showResult(result) {
   $resultCard.classList.remove("hidden");
   $btnZone.classList.remove("hidden");
 
-  // Меняем текст кнопки
   document.getElementById("pickBtnLabel").textContent = "Сканировать ещё";
 }
 
@@ -142,20 +134,10 @@ async function loadChatPhotos() {
   const grid = document.getElementById("chatGallery");
 
   try {
-       const res = await fetch(
-           `${GALLERY_WORKER}/api/photos`,
-           {
-               signal: AbortSignal.timeout(6000)
-           }
-       );
-   
-       const data = await res.json();
-   
-       console.log(data);
-      }
-      catch (err) {
-       console.error(err);
-      }
+    const res  = await fetch(`${GALLERY_WORKER}/api/photos`, {
+      signal: AbortSignal.timeout(6000)
+    });
+    const data = await res.json();
 
     if (!data.photos || data.photos.length === 0) {
       grid.innerHTML = `<div class="gallery-empty-msg">Нет фото из чата</div>`;
