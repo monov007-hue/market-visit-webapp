@@ -55,15 +55,21 @@ body {
 }
 
 .logo-icon {
-  width: 44px;
-  height: 44px;
+  width: 44px !important;
+  height: 44px !important;
+  max-width: 44px !important;
+  max-height: 44px !important;
   flex-shrink: 0;
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 4px 14px rgba(43,159,234,.30);
 }
 
-.logo-icon svg { width: 44px; height: 44px; display: block; }
+.logo-icon svg {
+  width: 44px !important;
+  height: 44px !important;
+  display: block;
+}
 
 .logo-title {
   font-size: 20px;
