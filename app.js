@@ -271,7 +271,7 @@ async function loadChatPhotos() {
       img.src = `${GALLERY_WORKER}/api/proxy?url=${encodeURIComponent(p.url)}`;
       img.loading = "lazy";
       img.alt     = "";
-      img.onclick = () => selectFromGallery(p.url);
+      img.onclick = () => selectFromGallery(`${GALLERY_WORKER}/api/proxy?url=${encodeURIComponent(p.url)}`);
       grid.appendChild(img);
     });
 
