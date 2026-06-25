@@ -16,20 +16,24 @@ tg.setBackgroundColor('#EBF3FB');
 /* ══════════════════════════════════════
    ЭЛЕМЕНТЫ
 ══════════════════════════════════════ */
-const $previewZone = document.getElementById("previewZone");
-const $previewImg  = document.getElementById("previewImg");
-const $previewVeil = document.getElementById("previewVeil");
-const $veilLabel   = document.getElementById("veilLabel");
-const $resultCard  = document.getElementById("resultCard");
-const $fileInput   = document.getElementById("fileInput");
-const $btnZone     = document.getElementById("btnZone");
-const $refreshBtn  = document.getElementById("refreshBtn");
+const $previewZone  = document.getElementById("previewZone");
+const $previewImg   = document.getElementById("previewImg");
+const $previewVeil  = document.getElementById("previewVeil");
+const $veilLabel    = document.getElementById("veilLabel");
+const $resultCard   = document.getElementById("resultCard");
+const $fileInput    = document.getElementById("fileInput");
+const $btnZone      = document.getElementById("btnZone");
+const $refreshBtn   = document.getElementById("refreshBtn");
+const $feedbackZone = document.getElementById("feedbackZone");
+const $correctForm  = document.getElementById("correctForm");
 
-const $resName     = document.getElementById("resName");
-const $resBrand    = document.getElementById("resBrand");
-const $resCategory = document.getElementById("resCategory");
+const $resName      = document.getElementById("resName");
+const $resBrand     = document.getElementById("resBrand");
+const $resCategory  = document.getElementById("resCategory");
 
-let isAnalyzing = false;
+let isAnalyzing  = false;
+let lastProductId = null;  // id последнего проанализированного товара
+let lastResult    = null;  // последний результат анализа
 
 /* ══════════════════════════════════════
    ОТКРЫТЬ ПИКЕР
@@ -57,6 +61,8 @@ $fileInput.addEventListener("change", function(e) {
     $previewImg.src = ev.target.result;
     $previewZone.classList.remove("hidden");
     $resultCard.classList.add("hidden");
+    $feedbackZone.classList.add("hidden");
+    $correctForm.classList.add("hidden");
     $btnZone.classList.add("hidden");
     analyzePhoto(ev.target.result);
   };
@@ -69,6 +75,7 @@ $fileInput.addEventListener("change", function(e) {
 async function analyzePhoto(dataUrl) {
   if (isAnalyzing) return;
   isAnalyzing = true;
+  lastProductId = null;
 
   setVeil(true, "Анализирую...");
 
@@ -77,9 +84,9 @@ async function analyzePhoto(dataUrl) {
 
     setVeil(true, "Google Vision...");
     const response = await fetch(`${ANALYZE_WORKER}/api/analyze`, {
-      method: "POST",
+      method:  "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ image: base64 }),
+      body:    JSON.stringify({ image: base64 }),
     });
 
     setVeil(true, "Определяю товар...");
@@ -94,6 +101,9 @@ async function analyzePhoto(dataUrl) {
     if (!result.product_name) {
       throw new Error("Не удалось определить товар");
     }
+
+    lastResult    = result;
+    lastProductId = result.product_id || null;
 
     showResult(result);
 
@@ -119,9 +129,120 @@ function showResult(result) {
   $resCategory.textContent = result.category || result.product_category || "Другое";
 
   $resultCard.classList.remove("hidden");
+  $feedbackZone.classList.remove("hidden");
+  $correctForm.classList.add("hidden");
   $btnZone.classList.remove("hidden");
 
   document.getElementById("pickBtnLabel").textContent = "Сканировать ещё";
+}
+
+/* ══════════════════════════════════════
+   ЛАЙК / ДИЗЛАЙК
+══════════════════════════════════════ */
+async function sendFeedback(vote) {
+  // Блокируем кнопки
+  document.getElementById("btnLike").disabled    = true;
+  document.getElementById("btnDislike").disabled = true;
+
+  if (vote === 1) {
+    // Лайк — просто отправляем
+    await postFeedback(vote);
+    showToast("👍 Спасибо за оценку!");
+    $feedbackZone.classList.add("hidden");
+
+  } else {
+    // Дизлайк — показываем форму исправления
+    $correctForm.classList.remove("hidden");
+
+    // Заполняем поля текущими значениями
+    document.getElementById("inputName").value     = lastResult?.product_name || "";
+    document.getElementById("inputBrand").value    = lastResult?.brand        || "";
+
+    // Заполняем выпадашку категорий
+    fillCategorySelect();
+    const currentCat = lastResult?.category || lastResult?.product_category || "Другое";
+    document.getElementById("inputCategory").value = currentCat;
+  }
+}
+
+function fillCategorySelect() {
+  const select = document.getElementById("inputCategory");
+  if (select.options.length > 1) return; // уже заполнено
+
+  const categories = [
+    "Свежие овощи","Свежие фрукты","Зелень и салаты","Грибы","Молоко",
+    "Кефир и йогурты","Сметана и сливки","Творог и творожки","Сыры",
+    "Масло сливочное","Молочные напитки","Мороженое","Мясо",
+    "Колбасы и сосиски","Рыба и морепродукты","Консервы мясные",
+    "Консервы рыбные","Хлеб и батоны","Булочки и пирожки",
+    "Торты и пирожные","Печенье и вафли","Сушки и сухари",
+    "Шоколад и батончики","Конфеты и карамель","Зефир и мармелад",
+    "Халва и козинаки","Жевательные резинки","Чипсы и сухарики",
+    "Орехи и семечки","Попкорн","Сухофрукты","Батончики злаковые",
+    "Крупы","Макароны и лапша","Мука и смеси","Бобовые",
+    "Растительные масла","Майонез и кетчуп","Соусы и приправы",
+    "Специи и пряности","Варенье и джемы","Мёд","Сгущённое молоко",
+    "Сиропы и топпинги","Замороженные овощи","Пельмени и вареники",
+    "Замороженные блюда","Овощные консервы","Готовые супы",
+    "Готовые каши","Паштеты","Детское питание","Газированные напитки",
+    "Соки и нектары","Вода","Энергетики","Чай","Кофе","Алкоголь",
+    "Безглютеновые продукты","Диетические продукты","Органические продукты",
+    "Спортивное питание","Растительные альтернативы","Другое",
+  ];
+
+  select.innerHTML = "";
+  categories.forEach(cat => {
+    const opt = document.createElement("option");
+    opt.value       = cat;
+    opt.textContent = cat;
+    select.appendChild(opt);
+  });
+}
+
+async function submitCorrection() {
+  const name     = document.getElementById("inputName").value.trim();
+  const brand    = document.getElementById("inputBrand").value.trim();
+  const category = document.getElementById("inputCategory").value;
+
+  if (!name) {
+    showToast("Введите название товара");
+    return;
+  }
+
+  await postFeedback(-1, name, brand, category);
+
+  // Обновляем карточку результата
+  $resName.textContent     = name;
+  $resBrand.textContent    = brand    || "Не определено";
+  $resCategory.textContent = category || "Другое";
+
+  $correctForm.classList.add("hidden");
+  $feedbackZone.classList.add("hidden");
+  showToast("✅ Исправление сохранено, спасибо!");
+}
+
+async function postFeedback(vote, correctName = null, correctBrand = null, correctCategory = null) {
+  try {
+    await fetch(`${ANALYZE_WORKER}/api/feedback`, {
+      method:  "POST",
+      headers: { "Content-Type": "application/json" },
+      body:    JSON.stringify({
+        product_id:       lastProductId,
+        vote,
+        correct_name:     correctName,
+        correct_brand:    correctBrand,
+        correct_category: correctCategory,
+      }),
+    });
+  } catch(e) {
+    console.warn("Ошибка отправки фидбека:", e);
+  }
+}
+
+function cancelCorrection() {
+  $correctForm.classList.add("hidden");
+  document.getElementById("btnLike").disabled    = false;
+  document.getElementById("btnDislike").disabled = false;
 }
 
 /* ══════════════════════════════════════
@@ -170,6 +291,8 @@ async function selectFromGallery(url) {
       $previewImg.src = ev.target.result;
       $previewZone.classList.remove("hidden");
       $resultCard.classList.add("hidden");
+      $feedbackZone.classList.add("hidden");
+      $correctForm.classList.add("hidden");
       $btnZone.classList.add("hidden");
       analyzePhoto(ev.target.result);
     };
