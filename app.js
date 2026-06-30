@@ -4,6 +4,8 @@
 const ANALYZE_WORKER = "https://worker-production-fbf0.up.railway.app";
 const GALLERY_WORKER = "https://worker-production-fbf0.up.railway.app";
 const MAX_SIZE_MB    = 4;
+const JPEG_MAX_DIM   = 1600;   // максимальная сторона после конвертации
+const JPEG_QUALITY   = 0.85;
 
 /* ══════════════════════════════════════
    TELEGRAM INIT
@@ -44,9 +46,41 @@ function openPicker() {
 }
 
 /* ══════════════════════════════════════
-   ВЫБОР ФАЙЛА → сразу анализ
+   КОНВЕРТАЦИЯ ЛЮБОГО ФОРМАТА (включая HEIC с iPhone) В JPEG
+   через canvas — работает, потому что Safari/WebKit умеет
+   нативно декодировать HEIC в <img>, даже если сам JS этого не умеет.
 ══════════════════════════════════════ */
-$fileInput.addEventListener("change", function(e) {
+function fileToJpegDataUrl(file, maxDim = JPEG_MAX_DIM, quality = JPEG_QUALITY) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error("Не удалось прочитать файл"));
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onerror = () => reject(new Error("Формат фото не поддерживается. Попробуйте другое фото."));
+      img.onload = () => {
+        let { width, height } = img;
+        if (width > maxDim || height > maxDim) {
+          const scale = maxDim / Math.max(width, height);
+          width  = Math.round(width  * scale);
+          height = Math.round(height * scale);
+        }
+        const canvas = document.createElement("canvas");
+        canvas.width  = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL("image/jpeg", quality));
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+/* ══════════════════════════════════════
+   ВЫБОР ФАЙЛА → конвертация → анализ
+══════════════════════════════════════ */
+$fileInput.addEventListener("change", async function(e) {
   const file = e.target.files[0];
   if (!file) return;
   this.value = "";
@@ -56,17 +90,24 @@ $fileInput.addEventListener("change", function(e) {
     return;
   }
 
-  const reader = new FileReader();
-  reader.onload = function(ev) {
-    $previewImg.src = ev.target.result;
+  try {
+    setVeil(true, "Обрабатываю фото...");
     $previewZone.classList.remove("hidden");
+    const jpegDataUrl = await fileToJpegDataUrl(file);
+
+    $previewImg.src = jpegDataUrl;
     $resultCard.classList.add("hidden");
     $feedbackZone.classList.add("hidden");
     $correctForm.classList.add("hidden");
     $btnZone.classList.add("hidden");
-    analyzePhoto(ev.target.result);
-  };
-  reader.readAsDataURL(file);
+    analyzePhoto(jpegDataUrl);
+
+  } catch (err) {
+    console.error("Ошибка конвертации фото:", err);
+    showToast("⚠️ " + err.message);
+    setVeil(false);
+    $previewZone.classList.add("hidden");
+  }
 });
 
 /* ══════════════════════════════════════
